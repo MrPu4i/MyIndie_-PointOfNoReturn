@@ -1,22 +1,15 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class Player : MonoBehaviour
 {
     public static Player Instance;
 
-    public int Money = 100;
+    public int Money = 600;
     public int implantsCount = 0;
-    public Dictionary<string, Implant> Implants = new Dictionary<string, Implant>()
-    {
-        {"arms", null},
-        {"legs", null},
-        {"eyes", null},
-        {"ears", null},
-        {"heart", null},
-        {"lungs", null}
-    };
+    public Dictionary<string, Implant> Implants;
     public bool HasWorkedToday = false;
 
     void Awake()
@@ -29,9 +22,20 @@ public class Player : MonoBehaviour
             return;
         }
 
+        Implants = new Dictionary<string, Implant>()
+        {
+        {"arms", new Implant("Руки", "arms", 80, "Sprites/normal_hand", new Vector2 (310,598))},
+        {"legs", new Implant("Ноги", "legs", 80, "Sprites/normal_hand", new Vector2 (314,198))},
+        {"eyes", new Implant("Глаза", "eyes", 80, "Sprites/normal_hand", new Vector2 (313,775))},
+        {"ears", new Implant("Уши", "ears", 80, "Sprites/normal_hand", new Vector2 (313,758))},
+        {"heart", new Implant("Сердце", "heart", 80, "Sprites/normal_hand", new Vector2 (356,539))},
+        {"lungs", new Implant("Лёгкие", "lungs", 80, "Sprites/normal_hand", new Vector2 (290,506))},
+        {"liver", new Implant("Печень", "liver", 80, "Sprites/normal_hand", new Vector2 (356,510))},
+        {"kidneys", new Implant("Почки", "kidneys", 80, "Sprites/normal_hand", new Vector2 (320,506))}
+        };
         Instance = this;
         DontDestroyOnLoad(gameObject);
-        Debug.Log("Player создан и сохранен!");
+        //Debug.Log("Player создан и сохранен!");
     }
 
     void OnDestroy()
@@ -66,12 +70,14 @@ public class Player : MonoBehaviour
             implantsCount++;
             Money -= implant.Price;
             Debug.Log(implant.Name);
-            Debug.Log(Implants[implant.Slot]);
+            /*Debug.Log(Implants[implant.Slot]);*/
 
-//Debug.Log($"Вы заменили {Implants[implant.Slot]} на {implant.Name}");
+            //Debug.Log($"Вы заменили {Implants[implant.Slot]} на {implant.Name}");
+            Debug.Log(implant.Slot);
             Implants[implant.Slot] = implant; //заменяем имплант
 
-            UpdateBodyVisual(implant.Slot);
+            //в этот момент обновить Player
+            /*UpdateBodyVisual(implant.Slot);*/
 
             // Если купили мозг - игра окончена
             if (implant.Slot == "brain")
@@ -84,19 +90,5 @@ public class Player : MonoBehaviour
         }
         return "Недостаточно денег.";
     }
-
-    private void UpdateBodyVisual(string slot)
-    {
-        Debug.Log("Меняем спрайт части тела");
-        /*switch (slot)
-        {
-            case "left_arm":
-                leftArmSprite.sprite = Implants[slot].Sprite;
-                break;
-            case "right_arm":
-                rightArmSprite.sprite = Implants[slot].Sprite;
-                break;
-                // и т.д.
-        }*/
-    }
 }
+

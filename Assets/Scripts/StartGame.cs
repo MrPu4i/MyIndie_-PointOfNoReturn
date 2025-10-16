@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 public class StartGame : MonoBehaviour
 {
     public GameObject adds;
+    public GameObject canvasToClear;
     public void AddsOn()
     {
         //Запустить панель с рекламой
@@ -12,6 +13,8 @@ public class StartGame : MonoBehaviour
 
     public void OnRoomButton()
     {
-        SceneManager.LoadScene("Room");
+
+        SceneManager.LoadScene("Room", LoadSceneMode.Additive); //Оставить эту сцену работающей
+        canvasToClear.SetActive(false);
     }
 }

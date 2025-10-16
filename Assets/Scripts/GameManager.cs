@@ -11,7 +11,6 @@ public class ShopData
     public List<Implant> availableImplants;
     public bool lvl2ShopUnlocked;
     public bool lvl3ShopUnlocked;
-    public GameObject talking_with_master;
 }
 
 public class GameManager : MonoBehaviour
@@ -22,12 +21,16 @@ public class GameManager : MonoBehaviour
     public bool GameOver = false;
     public ShopData shopData;
     public bool isThereDataInShopData = false;
+    public bool isThisFirstShopPanel = true;
 
     // UI элементы
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI dayText;
     /*public GameObject gameOverPanel;*/
     /*public TextMeshProUGUI gameOverText;*/
+
+
+    public GameObject sp;
 
 
     void Awake()
@@ -48,8 +51,13 @@ public class GameManager : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log($"Загружена сцена: {scene.name}");
         Canvas canvas = FindFirstObjectByType<Canvas>();
+        //ПРи каждом переходе сцены!!
+        if (scene.name == "Shop")
+        {
+        }
+        Debug.Log($"Загружена сцена: {scene.name}");
+        
         moneyText = canvas.transform.Find("Text_money").GetComponent<TextMeshProUGUI>();
         dayText = canvas.transform.Find("Text_day").GetComponent<TextMeshProUGUI>();
         UpdateUI();
@@ -95,7 +103,6 @@ public class GameManager : MonoBehaviour
     public void OnShopButton()
     {
         SceneManager.LoadScene("Shop"); //По названию сцены
-        UpdateUI();
     }
 
     public void OnRoomEnter()
@@ -110,7 +117,6 @@ public class GameManager : MonoBehaviour
 
     public void UpdateUI()
     {
-        //Debug.Log(moneyText);
         moneyText.text = $"Деньги: {Player.Instance.Money}";
         dayText.text = $"День: {Day}";
     }

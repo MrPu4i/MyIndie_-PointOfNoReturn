@@ -361,6 +361,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   adds: {fileID: 1359476521}
+  canvasToClear: {fileID: 1342871163}
 --- !u!4 &554437097
 Transform:
   m_ObjectHideFlags: 0
@@ -825,7 +826,7 @@ GameObject:
   - component: {fileID: 1342871166}
   - component: {fileID: 1342871165}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: CanvasMain
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

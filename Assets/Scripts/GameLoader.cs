@@ -7,6 +7,7 @@ public class GameLoader : MonoBehaviour
 {
     public GameObject gameManagerPrefab;
     public GameObject playerPrefab;
+    public GameObject shopPanelPrefab;
 
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI dayText;
