@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using System.Collections;
 using TMPro;
 using UnityEngine.InputSystem;
+using UnityEditor.SearchService;
+using UnityEngine.SceneManagement;
 //using Unity.Cinemachine;
 
 public class DialogueManager : MonoBehaviour
@@ -16,27 +18,21 @@ public class DialogueManager : MonoBehaviour
     [SerializeField] public Button nextButton;
 
     [Header("Ссылки")]
-    //[SerializeField] private CinemachineCamera cineCam;
     [HideInInspector] public DialogueTrigger.DialogueLine[] currentSentence;
     [HideInInspector] public int currentSentenceIndex;
     [HideInInspector] public bool isTyping;
     [HideInInspector] public bool isDialogueActive; // Флаг активного диалога
-    [SerializeField] private GameObject player;
-    [SerializeField] private AudioSource typeSound;
+    [SerializeField] private AudioSource typeSourse;
+    [SerializeField] private AudioClip typeClip;
+    [SerializeField] private Shop shop;
 
     private float minPitch = 0.9f;
     private float maxPitch = 1.1f;
-    private Vector3 cordPlayer;
-
-
-    private Animator animator;
-    private PlayerInput playerInput;
-    //private CinemachinePositionComposer positionComposer;
-
+    private bool isThisMasterDialogue;
+    private bool isThisAfterTabletka;
 
     private void Awake()
     {
-        playerInput = player.GetComponent<PlayerInput>();
         if (Instance == null)
             Instance = this;
         else
@@ -45,39 +41,69 @@ public class DialogueManager : MonoBehaviour
         nextButton.onClick.AddListener(NextSentence);
     }
 
-    public virtual void StartDialogue(DialogueTrigger trigger, bool timelineBased = false, Animator _animator = null)
+    // Новый метод для запуска диалога напрямую из кода
+    public void StartDialogueFromCode(string[] texts, string[] speakerNames, bool master = false)
     {
-        animator = _animator;
+        isThisMasterDialogue = master;
+        
         if (isDialogueActive)
+        {
+            Debug.Log("Закончили диалог");
             EndDialogue();
+        }
 
-        currentSentence = trigger.dialogueSequence.lines;
+
+        // Создаем массив DialogueLine
+        DialogueTrigger.DialogueLine[] dialogueLines = new DialogueTrigger.DialogueLine[texts.Length];
+
+        for (int i = 0; i < texts.Length; i++)
+        {
+            dialogueLines[i] = new DialogueTrigger.DialogueLine
+            {
+                text = texts[i],
+                speakerName = speakerNames[i]
+            };
+        }
+
+        //Вместо StartDialogue
+
+        // Запускаем диалог
+        currentSentence = dialogueLines;
         currentSentenceIndex = 0;
         isDialogueActive = true;
 
-        if (animator != null) //передали аниматор
-        {
-            animator.SetTrigger("Next"); //триггерим, что бы перешёл в анимацию поднятия головы и далее смотрения на нас
-            //блокируем движение до окончания диалога
-            playerInput.enabled = false; //отключаем управление
-            //передвинуть камеру красиво
-    //        cineCam.Lens.OrthographicSize = 6f;
-            StartCoroutine(DialogueCamPartner());
-        }
+        //Debug.Log("Устанавливаем панель");
         dialoguePanel.SetActive(true);
         DisplayCurrentLine();
     }
-    private IEnumerator DialogueCamPartner()
+
+    // Упрощенная версия с одним говорящим
+    public void StartDialogueFromCodeSolo(string[] texts, string speakerName = "Персонаж", bool tabletka = false)
     {
-        yield return null;
-        //cordPlayer = cineCam.transform.position;
-        //Debug.Log(cineCam.transform.position);
-        //cineCam.transform.position = new Vector3(3, -138, -10);
-        //Debug.Log(cineCam.transform.position);
-       // cineCam.Follow = null;
-        //cineCam.LookAt = null;
-        //cineCam.GetComponent<CinemachineConfiner2D>().InvalidateBoundingShapeCache();
+        isThisAfterTabletka = tabletka;
+        Debug.Log(isThisAfterTabletka);
+        string[] speakerNames = new string[texts.Length];
+        for (int i = 0; i < texts.Length; i++)
+        {
+            speakerNames[i] = speakerName;
+        }
+
+        StartDialogueFromCode(texts, speakerNames);
     }
+
+/*    public virtual void StartDialogue(DialogueTrigger trigger, Animator _animator = null)
+    {
+
+        if (isDialogueActive)
+            EndDialogue();
+
+        currentSentence = trigger.dialogueSequence.lines; //Передаём предложения и уже воспроизводим сам диалог
+        currentSentenceIndex = 0;
+        isDialogueActive = true;
+
+        dialoguePanel.SetActive(true);
+        DisplayCurrentLine();
+    }*/
     public void ShowCurrentLine()
     {
         if (!isDialogueActive) return;
@@ -87,19 +113,29 @@ public class DialogueManager : MonoBehaviour
     public void DisplayCurrentLine()
     {
         speakerNameText.text = currentSentence[currentSentenceIndex].speakerName;
+
+        StopCoroutine("TypeSentence");
         StartCoroutine(TypeSentence(currentSentence[currentSentenceIndex].text));
     }
     private IEnumerator TypeSentence(string sentence)
     {
+/*        Debug.Log(sentence);
+        Debug.Log("Начили корутин с тайм сентенс");*/
         isTyping = true;
         dialogueText.text = "";
-
-        foreach (char letter in sentence.ToCharArray())
+        /*Debug.Log(sentence.ToCharArray());*/
+        /*foreach (char letter in sentence.ToCharArray())
         {
+            Debug.Log($"{letter}");
+        }*/
+            foreach (char letter in sentence.ToCharArray())
+        {
+            /*Debug.Log($"{letter}");*/
             dialogueText.text += letter;
+            /*Debug.Log(dialogueText.text);*/
             //звук буквыыыы
-            typeSound.pitch = Random.Range(minPitch, maxPitch);
-            typeSound.Play();
+            typeSourse.pitch = Random.Range(minPitch, maxPitch);
+            typeSourse.PlayOneShot(typeClip);
             yield return new WaitForSeconds(0.05f);
         }
 
@@ -108,7 +144,6 @@ public class DialogueManager : MonoBehaviour
 
     public void NextSentence()
     {
-        //Debug.Log("NextSentence");
         if (isTyping)
         {
             StopAllCoroutines();
@@ -118,47 +153,31 @@ public class DialogueManager : MonoBehaviour
         }
 
         currentSentenceIndex++;
-        //Debug.Log($"{currentSentenceIndex}, {currentSentence.Length}");
         if (currentSentenceIndex < currentSentence.Length)
         {
-            /*if (isItTimelineDialogue)
-            {
-                timelineDirector.Resume();
-                //если мы говорим с напарником - можем поймать конкретный момент и что-то сделать. Например поменять анимацию
-            }
-            else
-            {*/
                 DisplayCurrentLine();
-            /*}*/
         }
         else
         {
             //Debug.Log("СУКА ЗАКОНЧИЛИСЬ СЛОВА");
+
+            //Если это был разговор с мастером - нужно переходить к меню 
+            Debug.Log(isThisAfterTabletka);
+            if (isThisMasterDialogue == true)
+                shop.MasterDialogEnd();
+            if (isThisAfterTabletka == true)
+                SceneManager.LoadScene("Room");
             EndDialogue();
         }
     }
 
     public void EndDialogue()
     {
-        //Debug.Log("Зашли в коНЕЦ ДИАЛОГА");
-        if (animator != null)
-        {
-            animator.SetTrigger("Next"); //ещё раз триггерим, что бы он опустил голову
-            playerInput.enabled = true; //возвращаем управление
-            //Debug.Log("Включили управление в DialogueManager");
-
-           // cineCam.transform.position = cordPlayer;
-           // cineCam.Lens.OrthographicSize = 9.70f;
-            StartCoroutine(Damping());
-        }
         dialoguePanel.SetActive(false);
         isDialogueActive = false; // Сбрасываем флаг при завершении
     }
     private IEnumerator Damping()
     {
         yield return null;
-       // cineCam.Follow = player.transform;
-       // cineCam.LookAt = player.transform;
-        //cineCam.GetComponent<CinemachineConfiner2D>().InvalidateBoundingShapeCache();
     }
 }

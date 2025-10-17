@@ -6,6 +6,7 @@ public class ImplantsRendere : MonoBehaviour
 {
     [Header("Settings")]
     public RectTransform panel; // Перетащите сюда вашу Panel из Hierarchy
+    public Sprite teloSprite;
 
     [Header("Implant Display")]
     public Vector2 baseImplantSize = new Vector2(50, 50); // Базовый размер импланта
@@ -29,6 +30,18 @@ public class ImplantsRendere : MonoBehaviour
         // Очищаем старые импланты
         ClearImplantDisplay();
 
+        GameObject implantUI = new GameObject("ImplantUI тело");
+        implantUI.transform.SetParent(panel, false);
+        Image image = implantUI.AddComponent<Image>();
+        image.sprite = teloSprite;
+        image.preserveAspect = true; // Сохраняем пропорции спрайта
+        RectTransform rect = implantUI.GetComponent<RectTransform>();
+        rect.anchoredPosition = new Vector2(0,0);
+        /*rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchorMin = new Vector2(0, 0);
+        rect.anchorMax = new Vector2(0, 0);*/
+        rect.sizeDelta = new Vector2(620, 940);
+        currentImplantDisplays.Add(implantUI);
         // Отрисовываем все импланты игрока
         foreach (var implant in Player.Instance.Implants.Values)
         {
@@ -56,15 +69,15 @@ public class ImplantsRendere : MonoBehaviour
         RectTransform rect = implantUI.GetComponent<RectTransform>();
 
         // Размер
-        /*rect.sizeDelta = baseImplantSize * implant.Scale;*/
+        rect.sizeDelta = new Vector2(620, 940);
 
         // Позиция на панели
         rect.anchoredPosition = implant.Position;
 
-        // Центр в точке позиции
+        /*// Центр в точке позиции
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchorMin = new Vector2(0, 0);
-        rect.anchorMax = new Vector2(0, 0);
+        rect.anchorMax = new Vector2(0, 0);*/
 
         currentImplantDisplays.Add(implantUI);
     }

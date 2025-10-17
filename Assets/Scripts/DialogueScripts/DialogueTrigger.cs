@@ -5,7 +5,7 @@ public class DialogueTrigger : MonoBehaviour
     [System.Serializable]
     public class DialogueLine
     {
-        [TextArea(3, 5)]
+        [TextArea(1, 3)] //минимально линий 1, макс - 2
         public string text;
         public string speakerName; // Имя говорящего для каждой реплики
     }
@@ -14,79 +14,48 @@ public class DialogueTrigger : MonoBehaviour
     public class DialogueSequence
     {
         public DialogueLine[] lines; // Массив реплик с именами
-        public bool isItTimelineDialogue = false;
-        //public PlayableDirector timeline;
-        public bool isItFinalScene = false;
     }
 
-    [SerializeField] public DialogueSequence dialogueSequence;
-    [SerializeField] public Collider2D triggerCollider;
-    [SerializeField] public Animator animator = null;
-    //[SerializeField] public FinalScene finaleScene = null;
-    private bool isItTimelineDialogue;
+    [SerializeField] public DialogueSequence dialogueSequence; //Сам диалог, который состоит из реплик
 
-
-
-    private void Start()
+    // Для ручного вызова из других скриптов
+    public void TriggerDialogue() //Используем это, потому что в коде только включаем
     {
-        if (triggerCollider == null)
-            triggerCollider = GetComponent<Collider2D>();
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("Player"))
+        if (!DialogueManager.Instance.isDialogueActive) //Если нет активного диалога - начинаем
         {
-            //не проверяем, если был д
-            if (dialogueSequence.isItFinalScene) //зашли в триггер финальной сцены
-            {
-                if (DialogueManager.Instance.isDialogueActive) //если активен диалог
-                {
-                    DialogueManager.Instance.EndDialogue(); //заканчиваем предыдущий диалог
-                }
-                //начинается скрипт FinalScene
-              //  finaleScene.StartScene();
-            }
-            else if (!DialogueManager.Instance.isDialogueActive)
-            {
-                if (dialogueSequence.isItTimelineDialogue /*&& dialogueSequence.timeline != null*/)
-                {
-                    //Debug.Log("Зашли в диалог если тут есть напарник");
-                    DialogueManager.Instance.StartDialogue(this, true, animator);
-                    //Debug.Log("Строчка после диалога");
-                }
-                else
-                {
-                    //Debug.Log("Начали обычный диалог, без напарника");
-                    DialogueManager.Instance.StartDialogue(this);
-                }
-                if (triggerCollider != null)
-                {
-                    triggerCollider.enabled = false;
-                }
-            }
+           // DialogueManager.Instance.StartDialogue(this); //Начинаем диалог
         }
     }
 
-    // Для ручного вызова из других скриптов
-    public void TriggerDialogue()
+    // Новый метод для создания диалога из кода
+    public void SetDialogueFromCodeMany(string[] texts, string[] speakerNames)
     {
-        /*if (!DialogueManager.Instance.isDialogueActive)
+        dialogueSequence = new DialogueSequence();
+        dialogueSequence.lines = new DialogueLine[texts.Length];
+
+        for (int i = 0; i < texts.Length; i++)
         {
-            Debug.Log("До StartDialogue");
-            DialogueManager.Instance.StartDialogue(this);
-        }*/
-        if (!DialogueManager.Instance.isDialogueActive)
+            dialogueSequence.lines[i] = new DialogueLine
+            {
+                text = texts[i],
+                speakerName = speakerNames[i]
+            };
+        }
+    }
+
+    // Упрощенный метод (если только один говорящий)
+    public void SetDialogueFromCodeSolo(string[] texts, string speakerName = "Персонаж")
+    {
+        dialogueSequence = new DialogueSequence();
+        dialogueSequence.lines = new DialogueLine[texts.Length];
+
+        for (int i = 0; i < texts.Length; i++)
         {
-            if (dialogueSequence.isItTimelineDialogue /*&& dialogueSequence.timeline != null*/)
+            dialogueSequence.lines[i] = new DialogueLine
             {
-                Debug.Log("Зашли в диалог если тут есть напарник и мы вызываем не через коллайдер");
-                DialogueManager.Instance.StartDialogue(this, true);
-            }
-            else
-            {
-                DialogueManager.Instance.StartDialogue(this);
-            }
+                text = texts[i],
+                speakerName = speakerName
+            };
         }
     }
 }

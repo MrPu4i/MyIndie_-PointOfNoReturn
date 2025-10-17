@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -11,27 +12,30 @@ public class Player : MonoBehaviour
     public int implantsCount = 0;
     public Dictionary<string, Implant> Implants;
     public bool HasWorkedToday = false;
+    public int earnings = 0;
+    public int goal;
 
     void Awake()
     {
         // Singleton pattern
         if (Instance != null && Instance != this)
         {
-            Debug.Log("Уничтожаем дубликат Player!");
+            //Debug.Log("Уничтожаем дубликат Player!");
             Destroy(gameObject);
             return;
         }
 
+        goal = 3000;
         Implants = new Dictionary<string, Implant>()
         {
-        {"arms", new Implant("Руки", "arms", 80, "Sprites/normal_hand", new Vector2 (310,598))},
-        {"legs", new Implant("Ноги", "legs", 80, "Sprites/normal_hand", new Vector2 (314,198))},
-        {"eyes", new Implant("Глаза", "eyes", 80, "Sprites/normal_hand", new Vector2 (313,775))},
-        {"ears", new Implant("Уши", "ears", 80, "Sprites/normal_hand", new Vector2 (313,758))},
-        {"heart", new Implant("Сердце", "heart", 80, "Sprites/normal_hand", new Vector2 (356,539))},
+        {"arms", new Implant("Руки", "arms", 25, "Sprites/Ruki", new Vector2 (0,0))},
+        {"legs", new Implant("Ноги", "legs", 15, "Sprites/Nogi", new Vector2 (0,0))},
+        {"eyes", new Implant("Глаза", "eyes", 30, "Sprites/Glaza", new Vector2 (0,0))},
+        {"ears", new Implant("Уши", "ears", 10, "Sprites/Ushi", new Vector2 (0,0))},
+        {"heart", new Implant("Сердце", "heart", 110, "Sprites/normal_hand", new Vector2 (356,539))},
         {"lungs", new Implant("Лёгкие", "lungs", 80, "Sprites/normal_hand", new Vector2 (290,506))},
-        {"liver", new Implant("Печень", "liver", 80, "Sprites/normal_hand", new Vector2 (356,510))},
-        {"kidneys", new Implant("Почки", "kidneys", 80, "Sprites/normal_hand", new Vector2 (320,506))}
+        {"liver", new Implant("Печень", "liver", 60, "Sprites/normal_hand", new Vector2 (356,510))},
+        {"kidneys", new Implant("Почки", "kidneys", 45, "Sprites/normal_hand", new Vector2 (320,506))}
         };
         Instance = this;
         DontDestroyOnLoad(gameObject);
@@ -49,7 +53,7 @@ public class Player : MonoBehaviour
     {
         if (!HasWorkedToday)
         {
-            Money += 200;
+            Money += 50; //Просто приносит деньги
             //Чем больше имплантов, тем больше зарабатываете
             HasWorkedToday = true;
             return "Вы поработали и заработали 50 монет.";
@@ -60,6 +64,8 @@ public class Player : MonoBehaviour
     public string Sleep()
     {
         HasWorkedToday = false; //обновилли силы
+        //Начислили проценты
+        Money += earnings;
         return "Вы выспались и полны сил.";
     }
 
@@ -68,12 +74,17 @@ public class Player : MonoBehaviour
         if (Money >= implant.Price)
         {
             implantsCount++;
-            Money -= implant.Price;
-            Debug.Log(implant.Name);
-            /*Debug.Log(Implants[implant.Slot]);*/
+            Money += implant.Price;
+            earnings += implant.Price; //Увеличивается наш процент каждадневный
 
-            //Debug.Log($"Вы заменили {Implants[implant.Slot]} на {implant.Name}");
-            Debug.Log(implant.Slot);
+            //Debug.Log($"Что-то купили {GameManager.Instance.didWeByeSmth}");
+            GameManager.Instance.didWeByeSmth = true;
+
+            if (GameManager.Instance.isThisFirstTimeMakingImplants == false)
+            {
+                //1 Раз только должен зайти
+                GameManager.Instance.isThisFirstTimeMakingImplants = true; //И сразу фолз. Чтобы в шопе мы могли диалог другой в первый раз поставить
+            }
             Implants[implant.Slot] = implant; //заменяем имплант
 
             //в этот момент обновить Player

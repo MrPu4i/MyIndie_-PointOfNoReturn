@@ -8,7 +8,7 @@ public class Implant
 {
     public string Name;
     public string Slot; // "left_arm", "right_eye", "heart", "brain"
-    public int Price;
+    public int Price; //Сколько будут давать надбавки
     public string SpritePath; // Храним путь, а не Sprite
     public Vector2 Position; // Координаты на теле
     public bool IsSold;
