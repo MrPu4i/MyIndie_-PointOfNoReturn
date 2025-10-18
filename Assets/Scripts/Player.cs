@@ -25,17 +25,17 @@ public class Player : MonoBehaviour
             return;
         }
 
-        goal = 3000;
+        goal = 1000;
         Implants = new Dictionary<string, Implant>()
         {
         {"arms", new Implant("Руки", "arms", 25, "Sprites/Ruki", new Vector2 (0,0))},
         {"legs", new Implant("Ноги", "legs", 15, "Sprites/Nogi", new Vector2 (0,0))},
         {"eyes", new Implant("Глаза", "eyes", 30, "Sprites/Glaza", new Vector2 (0,0))},
         {"ears", new Implant("Уши", "ears", 10, "Sprites/Ushi", new Vector2 (0,0))},
-        {"heart", new Implant("Сердце", "heart", 110, "Sprites/normal_hand", new Vector2 (356,539))},
-        {"lungs", new Implant("Лёгкие", "lungs", 80, "Sprites/normal_hand", new Vector2 (290,506))},
-        {"liver", new Implant("Печень", "liver", 60, "Sprites/normal_hand", new Vector2 (356,510))},
-        {"kidneys", new Implant("Почки", "kidneys", 45, "Sprites/normal_hand", new Vector2 (320,506))}
+        {"heart", new Implant("Сердце", "heart", 110, "Sprites/normal_hand", new Vector2 (0, 100))},
+        {"lungs", new Implant("Лёгкие", "lungs", 80, "Sprites/normal_hand", new Vector2 (0,0))},
+        {"liver", new Implant("Печень", "liver", 60, "Sprites/normal_hand", new Vector2 (0,-100))},
+        {"kidneys", new Implant("Почки", "kidneys", 45, "Sprites/normal_hand", new Vector2 (0,-200))}
         };
         Instance = this;
         DontDestroyOnLoad(gameObject);
@@ -63,9 +63,11 @@ public class Player : MonoBehaviour
 
     public string Sleep()
     {
+
         HasWorkedToday = false; //обновилли силы
         //Начислили проценты
         Money += earnings;
+        GameManager.Instance.didWeByeSmth = false;
         return "Вы выспались и полны сил.";
     }
 
@@ -73,6 +75,16 @@ public class Player : MonoBehaviour
     {
         if (Money >= implant.Price)
         {
+            //Затемнение
+            //Звук
+            if (GameManager.Instance.dayCountForEye == 2)
+            {
+                //Появляем нас в нашей квартире
+                //Стрёмный звук
+                //Меняем чучуть квартиру
+            }
+            //Высветление
+
             implantsCount++;
             Money += implant.Price;
             earnings += implant.Price; //Увеличивается наш процент каждадневный
@@ -87,19 +99,27 @@ public class Player : MonoBehaviour
             }
             Implants[implant.Slot] = implant; //заменяем имплант
 
-            //в этот момент обновить Player
-            /*UpdateBodyVisual(implant.Slot);*/
-
-            // Если купили мозг - игра окончена
+            if (implant.Slot == "eyes")
+            {
+                GameManager.Instance.eyeIsSold = true;
+                return "Купили ГЛАЗА";
+                //После этого запускается скрипт отчёт
+            }    
             if (implant.Slot == "brain")
             {
-                GameManager.Instance.EndGame();
+                GameManager.Instance.EndGame("Мозг");
                 return "Вы поменяли мозг... Кто вы теперь?";
             }
 
             return $"Вы купили и установили имплант {implant.Name}";
         }
         return "Недостаточно денег.";
+    }
+
+    public void eyeCount()
+    {
+        int day = GameManager.Instance.Day;
+
     }
 }
 

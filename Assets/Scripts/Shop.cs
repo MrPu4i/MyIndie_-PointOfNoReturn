@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static UnityEditor.Progress;
 using UnityEngine.UI;
 using static System.Net.Mime.MediaTypeNames;
 using Unity.VisualScripting;
@@ -27,7 +26,10 @@ public class Shop : MonoBehaviour //В этом классе делаем всё, что связано с Shop
     public GameObject meds_yes;
     public GameObject meds_no;
     public ImplantsRendere implantsRenderer;
-    
+
+    public GameObject texts;
+
+
 
     public GameObject[] implantsInShop; //Каждый раз заходя я должна с этим списком свериться
     public GameObject[] lvls;
@@ -46,6 +48,7 @@ public class Shop : MonoBehaviour //В этом классе делаем всё, что связано с Shop
             MasterDialogStart("Первый раз");
 
             GameManager.Instance.isThereDataInShopData = true;
+            GameManager.Instance.lvlSelected = 0; //lvl1
         }
         else
         {
@@ -57,11 +60,24 @@ public class Shop : MonoBehaviour //В этом классе делаем всё, что связано с Shop
         meds_yes.SetActive(false);
         //Debug.Log(meds_yes.activeInHierarchy);
         meds_no.SetActive(false);
-
+        /*LvlSelectedRender();*/
+        if (Lvl2ShopUnlocked)
+        {
+            lvl2ShopPanel.SetActive(true);
+        }
+        if (Lvl3ShopUnlocked)
+        {
+            lvl2ShopPanel.SetActive(true);
+            lvl3ShopPanel.SetActive(true);
+        }
 
         UpdateShopUI();
-        UpdateAssortment(); //Обновляем ассортимент при входе
+        StartCoroutine(UpdateAssortment()); //Обновляем ассортимент при входе
         GameManager.Instance.UpdateUI(); //Уже должны обновить ему
+    }
+    private void Start()
+    {
+        Debug.Log(implantsRenderer.implantUIB);
     }
     private void CopyDataFrom(ShopData savedShop)
     {
@@ -72,7 +88,7 @@ public class Shop : MonoBehaviour //В этом классе делаем всё, что связано с Shop
         sd = new ShopData();
         sd.LoadData();
         Lvl2ShopUnlocked = sd.lvl2ShopUnlocked;
-        Lvl2ShopUnlocked = sd.lvl2ShopUnlocked;
+        Lvl3ShopUnlocked = sd.lvl3ShopUnlocked;
     }
 
     private void CopyDataTo(ShopData savedShop)
@@ -90,11 +106,11 @@ public class Shop : MonoBehaviour //В этом классе делаем всё, что связано с Shop
         AvailableImplants.Add(new Implant("Техно Ноги", "legs", 15, "Sprites/T-nogi", new Vector2(0, 0)));
         AvailableImplants.Add(new Implant("Техно Глаза", "eyes", 30, "Sprites/T-glaza", new Vector2(0, 0)));
         AvailableImplants.Add(new Implant("Техно Уши", "ears", 10, "Sprites/T-ushi", new Vector2(0, 0)));
-        AvailableImplants.Add(new Implant("Искусственное сердце", "heart", 110, "Sprites/hand", new Vector2(356, 539)));
-        AvailableImplants.Add(new Implant("Кибер-лёгкие", "lungs", 80, "Sprites/hand", new Vector2(290, 506)));
-        AvailableImplants.Add(new Implant("Техно-Печень", "liver", 60, "Sprites/hand", new Vector2(356, 510)));
-        AvailableImplants.Add(new Implant("Техно-Почки", "kidneys", 45, "Sprites/hand", new Vector2(320, 506)));
-        AvailableImplants.Add(new Implant("Техно Мозг", "brain", 1000, "Sprites/hand", new Vector2(1, 3)));
+        AvailableImplants.Add(new Implant("Искусственное сердце", "heart", 110, "Sprites/hand", new Vector2(0, 100)));
+        AvailableImplants.Add(new Implant("Кибер-лёгкие", "lungs", 80, "Sprites/hand", new Vector2(0, 0)));
+        AvailableImplants.Add(new Implant("Техно-Печень", "liver", 60, "Sprites/hand", new Vector2(0, -100)));
+        AvailableImplants.Add(new Implant("Техно-Почки", "kidneys", 45, "Sprites/hand", new Vector2(0, -200)));
+        AvailableImplants.Add(new Implant("Техно Мозг", "brain", 1000, "Sprites/hand", new Vector2(0, 0)));
 
         /*AvailableImplants.Add(new Implant("Техно Руки", "arms", 25, "Sprites/T-ruki", new Vector2(310, 598)));
         AvailableImplants.Add(new Implant("Техно Ноги", "legs", 15, "Sprites/T-nogi", new Vector2(314, 198)));
@@ -109,7 +125,30 @@ public class Shop : MonoBehaviour //В этом классе делаем всё, что связано с Shop
 
     public void BringToFront(int layerIndex) //Какую мы поставим
     {
+        GameManager.Instance.lvlSelected = layerIndex;
+        LvlSelectedRender();
         lvls[layerIndex].transform.SetAsLastSibling();
+    }
+
+    public void LvlSelectedRender()
+    {
+        Debug.Log(GameManager.Instance.lvlSelected);
+        if (GameManager.Instance.lvlSelected == 0)
+        {
+            implantsRenderer.implantUIB.SetActive(true);
+            implantsRenderer.implantUIT.SetActive(false);
+
+        }
+        if (GameManager.Instance.lvlSelected == 1)
+        {
+            implantsRenderer.implantUIB.SetActive(false);
+            implantsRenderer.implantUIT.SetActive(true);
+        }
+        if (GameManager.Instance.lvlSelected == -1)
+        {
+            implantsRenderer.implantUIB.SetActive(false);
+            implantsRenderer.implantUIT.SetActive(false);
+        }
     }
 
     public void MasterDialogEnd()
@@ -117,6 +156,9 @@ public class Shop : MonoBehaviour //В этом классе делаем всё, что связано с Shop
         talking_with_master.SetActive(false);
         playerPanel.SetActive(true);
         shopPanel.SetActive(true);
+        texts.SetActive(true);
+
+
     }
     public void MasterDialogStart(string what) //Смотреть какой это именно случай
     {
@@ -124,6 +166,7 @@ public class Shop : MonoBehaviour //В этом классе делаем всё, что связано с Shop
         talking_with_master.SetActive(true); //включаем экран разговора с мастером
         playerPanel.SetActive(false);
         shopPanel.SetActive(false);
+        texts.SetActive(false);
 
         if (what == "Открыт lvl2")
         {
@@ -232,32 +275,53 @@ public class Shop : MonoBehaviour //В этом классе делаем всё, что связано с Shop
     {
         SceneManager.LoadScene("Room");
     }
-    public void UpdateAssortment() //Нужен, когда новые уровни открываются
+    public IEnumerator UpdateAssortment() //Нужен, когда новые уровни открываются
     {
+        while (!implantsRenderer.IsReady)
+        {
+            yield return null; // Ждем один кадр
+        }
+
+        //LvlSelectedRender();
+
+        //Debug.Log("Обновляем ассортимент");
+        //Каждый раз при заходе происходит
         // Открываем внутренние органы после 2 имплантов
-        if (Player.Instance.implantsCount >= 2 && !Lvl2ShopUnlocked)
+        Debug.Log(Lvl2ShopUnlocked);
+        Debug.Log(Lvl3ShopUnlocked);
+        if (Player.Instance.implantsCount >= 3 && !Lvl2ShopUnlocked)
         {
             Debug.Log("Открыты внутренние импланты!");
-            MasterDialogStart("Открыт lvl2");
+            MasterDialogStart("Открыт lvl2"); //Должно произойти только 1 раз
 
             Lvl2ShopUnlocked = true; //открываем 2й левел магазина
-            //добавить список новых имплантов
+                                     //добавить список новых имплантов
+                                     //lvl2 открываем, включаем другой слой
+            //GameManager.Instance.lvlSelected = 1; //lvl2
 
             lvl2ShopPanel.SetActive(true); //Включаем вторую панель
+            GameManager.Instance.lvlSelected = 1;
         }
 
         // Открываем мозг после 5 имплантов
-        if (Player.Instance.implantsCount >= 4 && !Lvl3ShopUnlocked) 
+        if (Player.Instance.implantsCount >= 8 && !Lvl3ShopUnlocked) //Если купили всё до этого - открываем мозг
         {
             Debug.Log("Открыт Мозг! Осторожно с выбором...");
             MasterDialogStart("Открыт lvl3");
 
+            //GameManager.Instance.lvlSelected = 2; //lvl2
+
             Lvl3ShopUnlocked = true; //открыли 3й лвл
+            Debug.Log(Lvl3ShopUnlocked);
 
             //lvl3 object active
-            lvl2ShopPanel.SetActive(true);
             lvl3ShopPanel.SetActive(true);
+
+            GameManager.Instance.lvlSelected = 2;
         }
+
+        //Debug.Log("Обновляем панель в апдейте ассортимента");
+        LvlSelectedRender();
     }
 
     public void BuyImplant(int index, GameObject item)
@@ -274,6 +338,8 @@ public class Shop : MonoBehaviour //В этом классе делаем всё, что связано с Shop
             {
                 AvailableImplants[index].IsSold = true; //МЫ ПРОДАЛИ ЭТОТ ИМПЛАНТ'
                 implantsRenderer.RefreshImplantDisplay();
+                //Смотря какой lvl открыт
+                LvlSelectedRender();
                 UpdateShopUI();
             }
             Debug.Log(result);

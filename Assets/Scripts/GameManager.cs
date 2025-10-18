@@ -3,7 +3,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 [System.Serializable]
 public class ShopData
@@ -27,16 +26,20 @@ public class ShopData
     }
 }
 
-    public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
     public int Day = 1; //Начинаем с первого дня
     public int maxDays;
-    public bool GameOver = false;
+
+    //Технические
     public ShopData shopData;
     public bool isThereDataInShopData = false;
     public bool isThisFirstShopPanel = true;
+
+    public int lvlSelected = -1;
+    public int dayCountForEye = 0;
 
 
     //Исторические
@@ -44,12 +47,20 @@ public class ShopData
     public bool isThisFirstTime = true;
     [HideInInspector] public bool didWeByeSmth = false;
     public bool eyeIsSold; //Купили глаз
+    public bool GameOver = false;
+
 
     // UI элементы
     public TextMeshProUGUI moneyText;
     public TextMeshProUGUI dayText;
-    /*public GameObject gameOverPanel;*/
-    /*public TextMeshProUGUI gameOverText;*/
+    public TextMeshProUGUI freedomText;
+
+    public GameObject texts;
+
+
+    public GameObject gameOverPanel;
+    public GameObject gameOverButton;
+
 
 
     public GameObject sp;
@@ -66,26 +77,96 @@ public class ShopData
             return;
         }
 
-        maxDays = 20;
+        maxDays = 12;
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
+    public void FindTextElementsWithoutActivation()
+    {
+        // Метод, который не меняет активность объектов
+        moneyText = FindComponentInChildren<TextMeshProUGUI>(texts.transform, "Text_money");
+        dayText = FindComponentInChildren<TextMeshProUGUI>(texts.transform, "Text_day");
+        freedomText = FindComponentInChildren<TextMeshProUGUI>(texts.transform, "Text_freedom");
+    }
+
+    private T FindComponentInChildren<T>(Transform parent, string childName) where T : Component
+    {
+        // Ручной обход детей без использования GetComponentsInChildren
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            Transform child = parent.GetChild(i);
+
+            if (child.name == childName)
+            {
+                T component = child.GetComponent<T>();
+                if (component != null) return component;
+            }
+
+            // Рекурсивно проверяем детей
+            T foundInChildren = FindComponentInChildren<T>(child, childName);
+            if (foundInChildren != null) return foundInChildren;
+        }
+
+        return null;
+    }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Canvas canvas = FindFirstObjectByType<Canvas>();
+        gameOverPanel = GameObject.Find("GameOver");
+        Canvas[] allCanvases = Resources.FindObjectsOfTypeAll<Canvas>();
         //ПРи каждом переходе сцены!!
+
+        Debug.Log(allCanvases);
+        Canvas canvas = GameObject.FindFirstObjectByType<Canvas>();
+        Debug.Log(canvas);
+        if (canvas != null)
+        {
+            GameObject textss = null;
+            GameObject[] allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
+
+            foreach (GameObject obj in allObjects)
+            {
+                if (obj.name == "Texts" && obj.scene.isLoaded)
+                {
+                    textss = obj;
+                    break;
+                }
+            }
+            Debug.Log(textss);
+            texts = textss;
+            GameObject textst = GameObject.Find("Texts");
+            Debug.Log(textst); //null
+            FindTextElementsWithoutActivation();
+            /*texts = GameObject.Find("Texts");*/
+            TextMeshProUGUI[] allTexts = texts.GetComponentsInChildren<TextMeshProUGUI>(true);
+
+            foreach (TextMeshProUGUI text in allTexts)
+            {
+                switch (text.name)
+                {
+                    case "Text_money":
+                        moneyText = text;
+                        break;
+                    case "Text_day":
+                        dayText = text;
+                        break;
+                    case "Text_freedom":
+                        freedomText = text;
+                        break;
+                }
+            }
+        }
+
         if (scene.name == "Room") //В первый раз
         {
-            didWeByeSmth = false;
-
             if (isThisFirstTime == true)
             {
                 string[] texts = {
             "Тестирование имплантов.. Звучит рисково, но я как раз хотел накопить деньги на отпуск",
-            "Как раз здесь недалеко есть их отделение, нужно туда сходить."
+            "Здесь недалеко есть их отделение, нужно туда сходить",
+            "Ещё Санёк написал... Что-то там про безопасность хмм"
             };
 
                 /*Debug.Log($"StartDialogueSolo: {texts}");*/
@@ -96,12 +177,10 @@ public class ShopData
         }
         if (scene.name == "Shop")
         {
-            didWeByeSmth = false; //Сбрасываем покупку
         }
         Debug.Log($"Загружена сцена: {scene.name}");
-        
-        moneyText = canvas.transform.Find("Text_money").GetComponent<TextMeshProUGUI>();
-        dayText = canvas.transform.Find("Text_day").GetComponent<TextMeshProUGUI>();
+
+
         UpdateUI();
     }
 
@@ -122,6 +201,15 @@ public class ShopData
 
     public void OnWorkButton()
     {
+        if (Player.Instance.HasWorkedToday == true) //Уже работали
+        {
+            string[] texts = {
+            "Я уже поработал сегодня"
+            };
+
+            DialogueManager.Instance.StartDialogueFromCodeSolo(texts, "Владик");
+            return;
+        }
         string result = Player.Instance.Work();
         //Debug.Log(result);
         UpdateUI();
@@ -129,6 +217,15 @@ public class ShopData
 
     public void OnSleepButton()
     {
+        if (Player.Instance.HasWorkedToday == false)
+        {
+            string[] texts = {
+            "Я не могу лечь спать, не поработав"
+            };
+
+            DialogueManager.Instance.StartDialogueFromCodeSolo(texts, "Владик");
+            return;
+        }
         string result = Player.Instance.Sleep();
         //Debug.Log(result);
         StartNewDay(); //добавляем 1 день
@@ -137,10 +234,14 @@ public class ShopData
     public void StartNewDay()
     {
         if (Day >= maxDays)
-            EndGame(); //Дни истекли
+            EndGame("Дни истекли"); //Дни истекли
         if (GameOver) return;
 
         Day++;
+        if (eyeIsSold)
+        {
+            dayCountForEye++;
+        }
         UpdateUI();
     }
 
@@ -149,23 +250,66 @@ public class ShopData
         SceneManager.LoadScene("Shop"); //По названию сцены
     }
 
-    public void EndGame()
+    public void EndGame(string situation)
     {
-        if (Day >= maxDays)
+        gameOverPanel = GameObject.Find("GameOver");
+        gameOverButton.SetActive(true);//Включаем кнопку рестарта
+
+        Debug.Log(gameOverPanel.transform.Find("GameLoosSad").gameObject);
+        //Затемнение
+        if (situation == "Мозг") //Нас тепают сюда в момент покупки мозга
         {
-            if (Player.Instance.Money == Player.Instance.goal) //Набили нужную сумму
+            //Самая плохая концовка
+            gameOverPanel.transform.Find("GameLoosSad").gameObject.SetActive(true);
+            //Звук
+        }
+        if (eyeIsSold)
+        {
+            if (situation == "Дни истекли") //Дни истекли и мы накопили нужную сумму
             {
-                //Happy Ending на море
+                if (Player.Instance.Money >= Player.Instance.goal) //Набили нужную сумму
+                {
+                    //Happy Ending на море
+                    gameOverPanel.transform.Find("GameLoosHappy").gameObject.SetActive(true); //С экраном типо всё хорошо
+                    //Звук
+
+                }
+                else
+                {
+                    gameOverPanel.transform.Find("GameLoos").gameObject.SetActive(true);
+                    //Звук
+                }
             }
         }
-            GameOver = true;
-        //gameOverPanel.SetActive(true);
+        else 
+        {
+            if (situation == "Дни истекли") //Дни истекли и мы накопили нужную сумму
+            {
+                if (Player.Instance.Money >= Player.Instance.goal) //Набили нужную сумму
+                {
+                    //Happy Ending на море
+                    gameOverPanel.transform.Find("GameWin").gameObject.SetActive(true);
+                    //Звук
+
+                }
+                else
+                {
+                    gameOverPanel.transform.Find("GameLoosNoMoney").gameObject.SetActive(true);
+                    //Звук
+                }
+            }
+        }
+        gameOverPanel.SetActive(true);
+        //Включаем скрипт Гейм овера
     }
 
     public void UpdateUI()
     {
-        moneyText.text = $"Деньги: {Player.Instance.Money}";
-        dayText.text = $"День: {Day}";
+        Debug.Log("Пытаемся отрисовать данные");
+        dayText.text = $"{Day} / {maxDays}";
+        moneyText.text = $"{Player.Instance.earnings} $"; //+ с имплантов
+        freedomText.text = $"{Player.Instance.Money} / {Player.Instance.goal} $"; // 1504 / 3200 (цель)
+
     }
 
 }

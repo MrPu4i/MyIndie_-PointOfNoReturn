@@ -2,10 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using TMPro;
-using UnityEngine.InputSystem;
-using UnityEditor.SearchService;
 using UnityEngine.SceneManagement;
-//using Unity.Cinemachine;
 
 public class DialogueManager : MonoBehaviour
 {
@@ -39,6 +36,7 @@ public class DialogueManager : MonoBehaviour
             Destroy(gameObject);
 
         nextButton.onClick.AddListener(NextSentence);
+        Debug.Log("Awake");
     }
 
     // Новый метод для запуска диалога напрямую из кода
@@ -91,19 +89,6 @@ public class DialogueManager : MonoBehaviour
         StartDialogueFromCode(texts, speakerNames);
     }
 
-/*    public virtual void StartDialogue(DialogueTrigger trigger, Animator _animator = null)
-    {
-
-        if (isDialogueActive)
-            EndDialogue();
-
-        currentSentence = trigger.dialogueSequence.lines; //Передаём предложения и уже воспроизводим сам диалог
-        currentSentenceIndex = 0;
-        isDialogueActive = true;
-
-        dialoguePanel.SetActive(true);
-        DisplayCurrentLine();
-    }*/
     public void ShowCurrentLine()
     {
         if (!isDialogueActive) return;
@@ -119,15 +104,8 @@ public class DialogueManager : MonoBehaviour
     }
     private IEnumerator TypeSentence(string sentence)
     {
-/*        Debug.Log(sentence);
-        Debug.Log("Начили корутин с тайм сентенс");*/
         isTyping = true;
         dialogueText.text = "";
-        /*Debug.Log(sentence.ToCharArray());*/
-        /*foreach (char letter in sentence.ToCharArray())
-        {
-            Debug.Log($"{letter}");
-        }*/
             foreach (char letter in sentence.ToCharArray())
         {
             /*Debug.Log($"{letter}");*/
@@ -140,6 +118,7 @@ public class DialogueManager : MonoBehaviour
         }
 
         isTyping = false;
+        Debug.Log(isTyping);
     }
 
     public void NextSentence()
@@ -147,6 +126,7 @@ public class DialogueManager : MonoBehaviour
         if (isTyping)
         {
             StopAllCoroutines();
+
             dialogueText.text = currentSentence[currentSentenceIndex].text;
             isTyping = false;
             return;

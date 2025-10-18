@@ -7,15 +7,22 @@ public class ImplantsRendere : MonoBehaviour
     [Header("Settings")]
     public RectTransform panel; // Перетащите сюда вашу Panel из Hierarchy
     public Sprite teloSprite;
+    public Sprite teloSpriteT;
+
+    [HideInInspector] public GameObject implantUIB;
+    [HideInInspector] public GameObject implantUIT;
 
     [Header("Implant Display")]
     public Vector2 baseImplantSize = new Vector2(50, 50); // Базовый размер импланта
 
     private List<GameObject> currentImplantDisplays = new List<GameObject>();
+    public bool IsReady = false;
 
-    void Start()
+    private void Start()
     {
+        Debug.Log("Начали рендерить все импланты");
         RenderAllImplants();
+
     }
 
     void Update()
@@ -26,48 +33,62 @@ public class ImplantsRendere : MonoBehaviour
 
     public void RenderAllImplants()
     {
-        /*Debug.Log("Рендерим темплейтс");*/
         // Очищаем старые импланты
         ClearImplantDisplay();
 
-        GameObject implantUI = new GameObject("ImplantUI тело");
-        implantUI.transform.SetParent(panel, false);
-        Image image = implantUI.AddComponent<Image>();
+        //обычное тело
+        implantUIB = new GameObject("ImplantUI тело");
+        implantUIB.transform.SetParent(panel, false);
+        Image image = implantUIB.AddComponent<Image>();
         image.sprite = teloSprite;
+        Debug.Log(image.sprite);
         image.preserveAspect = true; // Сохраняем пропорции спрайта
-        RectTransform rect = implantUI.GetComponent<RectTransform>();
-        rect.anchoredPosition = new Vector2(0,0);
-        /*rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchorMin = new Vector2(0, 0);
-        rect.anchorMax = new Vector2(0, 0);*/
+        RectTransform rect = implantUIB.GetComponent<RectTransform>();
+        rect.anchoredPosition = new Vector2(0, 0);
         rect.sizeDelta = new Vector2(620, 940);
-        currentImplantDisplays.Add(implantUI);
+        currentImplantDisplays.Add(implantUIB);
+
+        implantUIT = new GameObject("ImplantUI тёмное тело");
+        implantUIT.transform.SetParent(panel, false);
+        Image imageT = implantUIT.AddComponent<Image>();
+        imageT.sprite = teloSpriteT;
+        Debug.Log(imageT.sprite);
+        imageT.preserveAspect = true; // Сохраняем пропорции спрайта
+        RectTransform rectT = implantUIT.GetComponent<RectTransform>();
+        rectT.anchoredPosition = new Vector2(0, 0);
+        rectT.sizeDelta = new Vector2(620, 940);
+        currentImplantDisplays.Add(implantUIT);
+
         // Отрисовываем все импланты игрока
         foreach (var implant in Player.Instance.Implants.Values)
         {
-            /*Debug.Log($"{implant.Name},{implant.Sprite}");*/
-            CreateImplantOnPanel(implant);
+            CreateImplantOnPanel(implant, implantUIB.transform, implantUIT.transform);
         }
+
+        IsReady = true;
     }
 
-    private void CreateImplantOnPanel(Implant implant)
+    private void CreateImplantOnPanel(Implant implant, Transform parent1, Transform parent2)
     {
 
         if (implant.Sprite == null) return;
 
-        /*Debug.Log("Создаем UI элемент для импланта");*/
-        // Создаем UI элемент для импланта
-        GameObject implantUI = new GameObject("ImplantUI"+implant.Name);
-        implantUI.transform.SetParent(panel, false);
+        GameObject implantUI = new GameObject("ImplantUI" + implant.Name);
+
+        if (implant.Slot == "arms" || implant.Slot == "legs" || implant.Slot == "eyes" || implant.Slot == "ears")
+        {
+            implantUI.transform.SetParent(parent1, false);
+        }
+        else if(implant.Slot == "heart" || implant.Slot == "lungs" || implant.Slot == "liver" || implant.Slot == "kidneys")
+        {
+            implantUI.transform.SetParent(parent2, false);
+        }
 
         // Добавляем Image компонент
         Image image = implantUI.AddComponent<Image>();
         image.sprite = implant.Sprite;
         image.preserveAspect = true; // Сохраняем пропорции спрайта
-
-        // Настраиваем RectTransform
         RectTransform rect = implantUI.GetComponent<RectTransform>();
-
         // Размер
         rect.sizeDelta = new Vector2(620, 940);
 
